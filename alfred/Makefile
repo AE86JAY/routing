@@ -3,18 +3,26 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=alfred
-PKG_VERSION:=2022.0
-PKG_RELEASE:=$(AUTORELEASE)
+PKG_VERSION:=2023.0
+PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://downloads.open-mesh.org/batman/releases/batman-adv-$(PKG_VERSION)
-PKG_HASH:=abba1dac61eccfcd6329e7331d0555fecc937760fb36c6cf55ce6c1d751cfd98
+PKG_HASH:=c5ecadce50e8228a912b4894567ad45d6ff1d2ba3991c978456e4bef9b7dbad1
 
 PKG_MAINTAINER:=Simon Wunderlich <sw@simonwunderlich.de>
 PKG_LICENSE:=GPL-2.0-only MIT
 PKG_LICENSE_FILES:=LICENSES/preferred/GPL-2.0 LICENSES/preferred/MIT
 
 PKG_BUILD_PARALLEL:=1
+PKG_BUILD_FLAGS:=gc-sections lto
+
+PKG_CONFIG_DEPENDS += \
+	CONFIG_ALFRED_NEEDS_lua \
+	CONFIG_ALFRED_NEEDS_libgps \
+	CONFIG_PACKAGE_ALFRED_VIS \
+	CONFIG_PACKAGE_ALFRED_BATHOSTS \
+	CONFIG_PACKAGE_ALFRED_GPSD
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -59,9 +67,6 @@ MAKE_FLAGS += \
         LIBNL_NAME="libnl-tiny" \
         LIBNL_GENL_NAME="libnl-tiny" \
         REVISION="$(PKG_VERSION)-openwrt-$(PKG_RELEASE)"
-
-TARGET_CFLAGS  += -ffunction-sections -fdata-sections -flto
-TARGET_LDFLAGS += -Wl,--gc-sections -fuse-linker-plugin
 
 define Package/alfred/install
 	$(INSTALL_DIR) $(1)/usr/sbin
