@@ -5,50 +5,6 @@
 #include <linux/version.h>	/* LINUX_VERSION_CODE */
 #include <linux/types.h>
 
-#if LINUX_VERSION_IS_LESS(5, 10, 0)
-
-#include <linux/if_bridge.h>
-
-struct batadv_br_ip {
-	union {
-		__be32  ip4;
-#if IS_ENABLED(CONFIG_IPV6)
-		struct in6_addr ip6;
-#endif
-	} dst;
-	__be16          proto;
-	__u16           vid;
-};
-
-struct batadv_br_ip_list {
-	struct list_head list;
-	struct batadv_br_ip addr;
-};
-
-#if 0
-/* "static" dropped to force compiler to evaluate it as part of multicast.c
- * might need to be added again and then called in some kind of dummy
- * compat.c in case this header is included in multiple files.
- */
-inline void __batadv_br_ip_list_check(void)
-{
-	BUILD_BUG_ON(sizeof(struct batadv_br_ip_list) != sizeof(struct br_ip_list));
-	BUILD_BUG_ON(offsetof(struct batadv_br_ip_list, list) != offsetof(struct br_ip_list, list));
-	BUILD_BUG_ON(offsetof(struct batadv_br_ip_list, addr) != offsetof(struct br_ip_list, addr));
-
-	BUILD_BUG_ON(sizeof(struct batadv_br_ip) != sizeof(struct br_ip));
-	BUILD_BUG_ON(offsetof(struct batadv_br_ip, dst.ip4) != offsetof(struct br_ip, u.ip4));
-	BUILD_BUG_ON(offsetof(struct batadv_br_ip, dst.ip6) != offsetof(struct br_ip, u.ip6));
-	BUILD_BUG_ON(offsetof(struct batadv_br_ip, proto) != offsetof(struct br_ip, proto));
-	BUILD_BUG_ON(offsetof(struct batadv_br_ip, vid) != offsetof(struct br_ip, vid));
-}
-#endif
-
-#define br_ip batadv_br_ip
-#define br_ip_list batadv_br_ip_list
-
-#endif /* LINUX_VERSION_IS_LESS(5, 10, 0) */
-
 #if LINUX_VERSION_IS_LESS(5, 14, 0)
 
 #include <linux/if_bridge.h>
@@ -92,32 +48,6 @@ br_multicast_has_router_adjacent(struct net_device *dev, int proto)
 
 #endif /* LINUX_VERSION_IS_LESS(5, 14, 0) */
 
-#if LINUX_VERSION_IS_LESS(5, 15, 0)
-
-static inline void batadv_eth_hw_addr_set(struct net_device *dev,
-					  const u8 *addr)
-{
-	ether_addr_copy(dev->dev_addr, addr);
-}
-#define eth_hw_addr_set batadv_eth_hw_addr_set
-
-#endif /* LINUX_VERSION_IS_LESS(5, 15, 0) */
-
-#if LINUX_VERSION_IS_LESS(5, 18, 0)
-
-#include <linux/netdevice.h>
-
-static inline int batadv_netif_rx(struct sk_buff *skb)
-{
-	if (in_interrupt())
-		return netif_rx(skb);
-	else
-		return netif_rx_ni(skb);
-}
-#define netif_rx batadv_netif_rx
-
-#endif /* LINUX_VERSION_IS_LESS(5, 18, 0) */
-
 #if LINUX_VERSION_IS_LESS(6, 0, 0)
 
 #define __vstring(item, fmt, ap) __dynamic_array(char, item, 256)
@@ -125,6 +55,21 @@ static inline int batadv_netif_rx(struct sk_buff *skb)
 	WARN_ON_ONCE(vsnprintf(__get_dynamic_array(dst), 256, fmt, *va) >= 256)
 
 #endif /* LINUX_VERSION_IS_LESS(6, 0, 0) */
+
+#if LINUX_VERSION_IS_LESS(6, 2, 0)
+
+#include <linux/random.h>
+
+#define genl_split_ops genl_ops
+
+static inline u32 batadv_get_random_u32_below(u32 ep_ro)
+{
+	return prandom_u32_max(ep_ro);
+}
+
+#define get_random_u32_below batadv_get_random_u32_below
+
+#endif /* LINUX_VERSION_IS_LESS(6, 2, 0) */
 
 /* <DECLARE_EWMA> */
 
